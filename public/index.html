@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lxn Bypass Sfl</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --bg:#0a0a0f; --card:#12121a; --accent:#7c5cff; --accent2:#00e0b8;
+    --text:#e8e8f0; --muted:#8a8aa0; --border:#24243a;
+  }
+  body{
+    font-family:'Segoe UI',-apple-system,sans-serif;
+    background:radial-gradient(circle at 20% 0%,#1a1030 0%,var(--bg) 55%);
+    color:var(--text); min-height:100vh; padding:24px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .wrap{ width:100%; max-width:860px; }
+  header{ text-align:center; margin:32px 0 28px; }
+  .logo{
+    font-size:2.4rem; font-weight:800; letter-spacing:-1px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .logo span{ font-weight:300; }
+  .sub{ color:var(--muted); font-size:.85rem; margin-top:8px; letter-spacing:2px; text-transform:uppercase; }
+  .bar{
+    display:flex; gap:10px; background:var(--card); border:1px solid var(--border);
+    border-radius:14px; padding:8px; margin-bottom:22px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+  .bar input{
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--text); padding:14px 16px; font-size:.95rem;
+  }
+  .bar input::placeholder{ color:var(--muted); }
+  .bar button{
+    background:linear-gradient(135deg,var(--accent),#5a3fd6);
+    color:#fff; border:none; border-radius:10px; padding:0 26px;
+    font-weight:700; cursor:pointer; font-size:.9rem;
+    transition:.25s; letter-spacing:.5px;
+  }
+  .bar button:hover{ filter:brightness(1.15); transform:translateY(-1px); }
+  .bar button:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+  .status{ text-align:center; color:var(--muted); font-size:.85rem; min-height:20px; margin-bottom:16px; }
+  .status.err{ color:#ff6b6b; }
+  .status.ok{ color:var(--accent2); }
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:36px; display:none;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  .card.show{ display:block; animation:fade .4s ease; }
+  @keyframes fade{ from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:none;} }
+  .card h1{ font-size:1.7rem; line-height:1.35; margin-bottom:20px; font-weight:700; }
+  .card h2{ font-size:1.3rem; margin:26px 0 12px; color:var(--accent2); }
+  .card h3{ font-size:1.1rem; margin:20px 0 10px; }
+  .card p{ color:#c8c8dc; line-height:1.8; margin-bottom:14px; font-size:.95rem; }
+  .card ul,.card ol{ margin:10px 0 16px 22px; }
+  .card li{ color:#c8c8dc; line-height:1.8; margin-bottom:8px; font-size:.95rem; }
+  .card img{ max-width:100%; border-radius:12px; margin:18px 0; display:block; }
+  .card a{ color:var(--accent2); }
+  .card figure{ margin:18px 0; }
+  .meta{ color:var(--muted); font-size:.78rem; border-top:1px solid var(--border); padding-top:16px; margin-top:24px; }
+  .empty{
+    text-align:center; padding:60px 24px; color:var(--muted);
+    border:1px dashed var(--border); border-radius:16px;
+  }
+  .empty .ico{ font-size:2.6rem; margin-bottom:14px; opacity:.5; }
+  .spinner{
+    display:inline-block; width:18px; height:18px; border:2px solid var(--border);
+    border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite;
+    vertical-align:middle; margin-right:8px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">Lxn<span> Bypass</span></div>
+    <div class="sub">Sfl Clean Reader</div>
+  </header>
+
+  <div class="bar">
+    <input id="url" type="text" placeholder="Tempel link Sfl... contoh: https://sfl.gl/5pLVGU93">
+    <button id="go">Bypass</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="empty" id="empty">
+    <div class="ico">⚡</div>
+    <div>Tempel link Sfl, klik Bypass. Konten langsung tampil tanpa iklan.</div>
+  </div>
+
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const statusEl = $('status'), cardEl = $('card'), emptyEl = $('empty'), inputEl = $('url'), btn = $('go');
+
+function setStatus(msg, type=''){ statusEl.textContent = msg; statusEl.className = 'status ' + type; }
+
+async function bypass(){
+  const raw = inputEl.value.trim();
+  if(!raw){ setStatus('Masukkan link dulu, Bos.', 'err'); return; }
+  try { new URL(raw); } catch { setStatus('Format URL tidak valid.', 'err'); return; }
+
+  btn.disabled = true;
+  cardEl.classList.remove('show');
+  emptyEl.style.display = 'none';
+  statusEl.innerHTML = '<span class="spinner"></span>Mengambil konten...';
+
+  try{
+    const res = await fetch('/api/bypass?url=' + encodeURIComponent(raw));
+    const data = await res.json();
+
+    if(!res.ok || !data.ok){
+      setStatus(data.error || 'Gagal mengambil konten.', 'err');
+      emptyEl.style.display = 'block';
+      btn.disabled = false;
+      return;
+    }
+
+    cardEl.innerHTML = `<h1>${data.title}</h1>${data.html}
+      <div class="meta">Sumber: ${data.source} — dibersihkan oleh Lxn Bypass</div>`;
+    cardEl.classList.add('show');
+    setStatus('Berhasil, Bos. Konten bersih tanpa iklan.', 'ok');
+  }catch(e){
+    setStatus('Error: ' + e.message, 'err');
+    emptyEl.style.display = 'block';
+  }
+  btn.disabled = false;
+}
+
+btn.addEventListener('click', bypass);
+inputEl.addEventListener('keydown', e => { if(e.key === 'Enter') bypass(); });
+
+const params = new URLSearchParams(location.search);
+if(params.get('url')){ inputEl.value = params.get('url'); bypass(); }
+</script>
+</body>
+</html>
